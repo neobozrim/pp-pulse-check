@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server"
 import { adminDatabase } from "@/lib/firebaseAdmin"
+import { Reference } from "firebase-admin/database"
 
 export async function POST(request: Request) {
   try {
     const { name } = await request.json();
     const eventsRef = adminDatabase.ref("events");
     
-    const createOperation = new Promise(async (resolve, reject) => {
+    const createOperation = new Promise<Reference>(async (resolve, reject) => {
       try {
         const newEventRef = await eventsRef.push({ name, ratings: [] });
-        // Verify write completed
         const snapshot = await newEventRef.once('value');
         if (!snapshot.exists()) {
           reject(new Error('Event creation failed - data not found'));
