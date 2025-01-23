@@ -1,26 +1,17 @@
 import { NextResponse } from "next/server"
 import { adminDatabase } from "@/lib/firebaseAdmin"
 
-export async function POST(request: Request): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
+export async function POST(request: Request) {
   try {
     const { name } = await request.json();
     const eventsRef = adminDatabase.ref("events");
+    const newEventRef = eventsRef.push({ name, ratings: [] });
     
-    return await new Promise<Response>((resolve, reject) => {
-      const newEventRef = eventsRef.push({ name, ratings: [] }, (error) => {
-        clearTimeout(timeoutId);
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve(NextResponse.json({ id: newEventRef.key, name }));
-      });
+    return NextResponse.json({ 
+      id: newEventRef.key, 
+      name 
     });
   } catch (error) {
-    clearTimeout(timeoutId);
     console.error("Event creation error:", error);
     return NextResponse.json({ error: "Failed to create event" }, { status: 500 });
   }
