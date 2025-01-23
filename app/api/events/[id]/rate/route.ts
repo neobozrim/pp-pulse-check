@@ -1,36 +1,34 @@
 // app/api/events/[id]/rate/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { getDatabase } from "@/lib/firebaseAdmin";
-import { ref, push } from "firebase/database";
+import { adminDatabase } from "@/lib/firebaseAdmin"; // Use adminDatabase from firebaseAdmin.ts
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// Define an interface for the second argument to avoid Next.js type errors
+interface RouteContext {
+  params: { id: string };
+}
+
+export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
-    // Destructure the dynamic param
+    // Extract the dynamic route parameter
     const { id } = params;
 
     // Parse the request body
     const { rating } = await request.json();
 
-    // Initialize the Firebase Realtime Database
-    const database = getDatabase();
+    // Build the reference for the "ratings" child under this event ID
+    const ratingsRef = adminDatabase.ref(`events/${id}/ratings`);
 
-    // Build the reference for ratings under this event ID
-    const ratingsRef = ref(database, `events/${id}/ratings`);
-
-    // Push the new rating to the DB
-    await push(ratingsRef, rating);
+    // Push the new rating to the DB using the Admin SDK
+    await ratingsRef.push(rating);
 
     // Return a success response
     return NextResponse.json({ success: true });
   } catch (error) {
-    // Return an error response if anything fails
+    console.error("Failed to submit rating:", error);
     return NextResponse.json(
       { error: "Failed to submit rating" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
