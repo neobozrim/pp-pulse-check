@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { database } from "@/lib/firebaseAdmin"
-import { ref, push, child } from "firebase/database"
+import { ref, push} from "firebase/database"
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -10,7 +10,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     await push(ratingsRef, rating)
 
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: "Failed to submit rating" }, { status: 500 })
   }
 }

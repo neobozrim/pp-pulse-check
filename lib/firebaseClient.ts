@@ -19,9 +19,6 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-// If you want Firestore:
-const db = getFirestore(app);
-
 // If you want Realtime Database:
 const database = getDatabase(app);
 
