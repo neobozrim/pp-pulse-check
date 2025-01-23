@@ -75,6 +75,8 @@ const EventList = () => {
 export default EventList
 
 **/
+/** uses the admin firebase not the client-side
+
 "use client"
 import React, { useEffect, useState } from "react"
 import Link from "next/link"
@@ -137,4 +139,80 @@ export default function EventList() {
       ))}
     </ul>
   )
+}  **/
+
+
+"use client";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { database } from "@/lib/firebaseClient";
+import { ref, onValue } from "firebase/database";
+
+// Shape of each event object stored in Realtime Database
+interface EventData {
+  name: string;
+  ratings?: number[];
+  // Add more fields as needed
+}
+
+interface EventWithId extends EventData {
+  id: string; // We'll derive this from the object's key
+}
+
+export default function EventList() {
+  const [events, setEvents] = useState<EventWithId[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Reference the "events" node in your Realtime Database
+    const eventsRef = ref(database, "events");
+
+    // Subscribe to changes at that node
+    const unsubscribe = onValue(
+      eventsRef,
+      (snapshot) => {
+        const data = snapshot.val() as Record<string, EventData> | null;
+        if (!data) {
+          // If there's no data, clear out events and mark loading as done
+          setEvents([]);
+          setIsLoading(false);
+          return;
+        }
+
+        // Convert the record into an array of { id, name, ... }
+        const eventList = Object.entries(data).map(([id, event]) => ({
+          id,
+          ...event,
+        }));
+
+        setEvents(eventList);
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error("Failed to load events:", error);
+        setIsLoading(false);
+      }
+    );
+
+    // Cleanup listener when component unmounts
+    return () => unsubscribe();
+  }, []);
+
+  if (isLoading) {
+    return <p>Loading events...</p>;
+  }
+
+  if (events.length === 0) {
+    return <p>No events found. Create your first event!</p>;
+  }
+
+  return (
+    <ul>
+      {events.map((evt) => (
+        <li key={evt.id}>
+          <Link href={`/event/${evt.id}`}>{evt.name}</Link>
+        </li>
+      ))}
+    </ul>
+  );
 }
