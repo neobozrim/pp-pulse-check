@@ -1,18 +1,36 @@
-import { NextResponse } from "next/server"
-/*import { database } from "@/lib/firebaseAdmin" */
-import { getDatabase } from '@/lib/firebaseAdmin'
-import { ref, push} from "firebase/database"
+// app/api/events/[id]/rate/route.ts
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+import { NextRequest, NextResponse } from "next/server";
+import { getDatabase } from "@/lib/firebaseAdmin";
+import { ref, push } from "firebase/database";
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const { rating } = await request.json()
-    const eventId = params.id
-    const ratingsRef = ref(database, `events/${eventId}/ratings`)
-    await push(ratingsRef, rating)
+    // Destructure the dynamic param
+    const { id } = params;
 
-    return NextResponse.json({ success: true })
-  } catch (_error) {
-    return NextResponse.json({ error: "Failed to submit rating" }, { status: 500 })
+    // Parse the request body
+    const { rating } = await request.json();
+
+    // Initialize the Firebase Realtime Database
+    const database = getDatabase();
+
+    // Build the reference for ratings under this event ID
+    const ratingsRef = ref(database, `events/${id}/ratings`);
+
+    // Push the new rating to the DB
+    await push(ratingsRef, rating);
+
+    // Return a success response
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    // Return an error response if anything fails
+    return NextResponse.json(
+      { error: "Failed to submit rating" },
+      { status: 500 }
+    );
   }
 }
-
