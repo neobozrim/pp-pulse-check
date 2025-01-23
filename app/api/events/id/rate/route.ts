@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
-import { database } from "@/lib/firebaseAdmin"
+/*import { database } from "@/lib/firebaseAdmin" */
+import { getDatabase } from '@/lib/firebaseAdmin'
 import { ref, push} from "firebase/database"
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {

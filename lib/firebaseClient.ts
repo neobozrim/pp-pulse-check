@@ -2,7 +2,7 @@
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 // If you need Firestore, keep it
-import { getFirestore } from "firebase/firestore";
+//import { getFirestore } from "firebase/firestore";
 // For Realtime Database, import this:
 import { getDatabase } from "firebase/database";
 
