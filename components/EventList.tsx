@@ -1,4 +1,4 @@
-"use client"
+/** "use client"
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
@@ -73,3 +73,68 @@ const EventList = () => {
 }
 
 export default EventList
+
+**/
+"use client"
+import React, { useEffect, useState } from "react"
+import Link from "next/link"
+import { adminDatabase } from "@/lib/firebaseAdmin" // or your DB import
+import { ref, onValue } from "firebase-admin/database" // Admin SDK
+// If you're using the *client* SDK in this file, import from "firebase/database" instead
+
+// Define the shape of your Event data WITHOUT the "id" key (since that's stored as the object key)
+interface BaseEvent {
+  name: string
+  ratings?: number[]
+  // ...any other fields
+}
+
+export default function EventList() {
+  const [events, setEvents] = useState<{ id: string; name: string }[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    // Reference your "events" node from the database
+    const eventsRef = ref(adminDatabase, "events")
+
+    // Subscribe to changes in the "events" node
+    const unsubscribe = onValue(eventsRef, (snapshot) => {
+      const data = snapshot.val()
+      if (!data) {
+        // If there's no data, just clear events and stop loading
+        setEvents([])
+        setIsLoading(false)
+        return
+      }
+
+      // Cast data to "Record<string, BaseEvent>"
+      const typedData = data as Record<string, BaseEvent>
+
+      // Convert the object to an array of { id, name }
+      const eventList = Object.entries(typedData).map(([id, event]) => ({
+        id,
+        name: event.name,
+      }))
+
+      setEvents(eventList)
+      setIsLoading(false)
+    })
+
+    // Cleanup the subscription when component unmounts
+    return () => unsubscribe()
+  }, [])
+
+  if (isLoading) {
+    return <p>Loading events...</p>
+  }
+
+  return (
+    <ul>
+      {events.map((evt) => (
+        <li key={evt.id}>
+          <Link href={`/event/${evt.id}`}>{evt.name}</Link>
+        </li>
+      ))}
+    </ul>
+  )
+}
